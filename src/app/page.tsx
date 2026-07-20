@@ -7,11 +7,16 @@ export default function Home() {
   const { user, isAuthenticated, isLoading, login } = useAuth();
 
   useEffect(() => {
-    // Initialize Telegram WebApp
+    console.log('[PAGE] === PAGE COMPONENT MOUNTED ===');
+    console.log('[PAGE] window.Telegram exists:', typeof window !== 'undefined' && !!window.Telegram);
+    console.log('[PAGE] window.Telegram.WebApp exists:', typeof window !== 'undefined' && !!window.Telegram?.WebApp);
+    
     if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
       const tg = window.Telegram.WebApp;
-      tg.ready();
-      tg.expand();
+      console.log('[PAGE] Telegram WebApp already initialized by AuthProvider');
+      console.log('[PAGE] Telegram WebApp version:', tg.version);
+      console.log('[PAGE] Telegram WebApp platform:', tg.platform);
+      console.log('[PAGE] Telegram WebApp initData length:', tg.initData?.length || 0);
     }
   }, []);
 
