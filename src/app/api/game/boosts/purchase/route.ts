@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get or create user boost
-    const { data: existingBoost, error: boostError } = await supabase
+    const { data: existingBoost } = await supabase
       .from('user_boosts')
       .select('*')
       .eq('user_id', userId)
@@ -187,6 +187,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function updateMissionProgress(supabase: any, userId: string, type: string, amount: number) {
   const { data: missions } = await supabase
     .from('missions')

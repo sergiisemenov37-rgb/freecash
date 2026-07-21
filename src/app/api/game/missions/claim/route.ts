@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { processReferralReward } from '@/lib/referralRewards';
 
 // Initialize Supabase client at runtime
 function getSupabaseClient() {
@@ -139,6 +140,14 @@ export async function POST(request: NextRequest) {
             mission_title: mission.title
           }
         });
+    }
+
+    // Process referral rewards (5% of coins and USDT earned)
+    if (rewardCoins > 0) {
+      await processReferralReward(userId, rewardCoins, 'COINS', 'mission');
+    }
+    if (rewardUsdt > 0) {
+      await processReferralReward(userId, rewardUsdt, 'USDT', 'mission');
     }
 
     // Get updated user

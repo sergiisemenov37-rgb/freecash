@@ -1,4 +1,4 @@
-const { createClient } = require('@supabase/supabase-js');
+/* eslint-disable @typescript-eslint/no-require-imports */
 const fs = require('fs');
 const path = require('path');
 
@@ -10,9 +10,6 @@ if (!supabaseUrl || !supabaseServiceKey) {
   console.error('Missing Supabase credentials. Please set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables.');
   process.exit(1);
 }
-
-// Create admin client
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // Read migration file
 const migrationPath = path.join(__dirname, '../supabase/migrations/001_initial_schema.sql');

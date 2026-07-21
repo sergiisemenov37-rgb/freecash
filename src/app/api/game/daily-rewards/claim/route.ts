@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { processReferralReward } from '@/lib/referralRewards';
 
 // Initialize Supabase client at runtime
 function getSupabaseClient() {
@@ -146,6 +147,9 @@ export async function POST(request: NextRequest) {
     // Update mission progress for daily reward
     await updateMissionProgress(supabase, userId, 'daily_reward', 1);
 
+    // Process referral rewards (5% of coins earned)
+    await processReferralReward(userId, rewardAmount, 'COINS', 'daily_reward');
+
     // Get updated user
     const { data: updatedUser } = await supabase
       .from('users')
@@ -170,6 +174,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function updateMissionProgress(supabase: any, userId: string, type: string, amount: number) {
   const { data: missions } = await supabase
     .from('missions')

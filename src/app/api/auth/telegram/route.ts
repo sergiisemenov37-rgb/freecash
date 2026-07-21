@@ -109,7 +109,8 @@ function validateInitData(initData: string): boolean {
 /**
  * Extract user from initData
  */
-function extractUser(initData: string): any {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function extractUser(initData: string): any {
   try {
     const url = new URLSearchParams(initData);
     const userStr = url.get('user');
@@ -136,11 +137,12 @@ export async function POST(request: NextRequest) {
   
   try {
     const body = await request.json();
-    const { initData } = body;
+    const { initData, referralCode } = body;
 
     console.log('[AUTH] initData received:', initData ? 'YES' : 'NO');
     console.log('[AUTH] initData length:', initData?.length || 0);
     console.log('[AUTH] initData preview:', initData?.substring(0, 100) + '...' || 'empty');
+    console.log('[AUTH] referralCode received:', referralCode || 'NONE');
     
     // Log detailed initData structure
     if (initData) {
@@ -206,6 +208,7 @@ export async function POST(request: NextRequest) {
     // Step 3: Create or get auth user using admin client
     console.log('[AUTH] === STEP 3: SUPABASE AUTH USER CREATION ===');
     console.log('[AUTH] Creating/getting auth user with admin client...');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const supabase = getSupabaseClient() as any;
     const email = `telegram_${telegramId}@freecash.app`;
     const password = telegramId.toString();
@@ -243,6 +246,7 @@ export async function POST(request: NextRequest) {
       if (listError) {
         console.error('[AUTH] Failed to list users:', listError);
       } else if (usersData?.users) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const existingUser = usersData.users.find((u: any) => u.email === email);
         if (existingUser) {
           console.log('[AUTH] Found existing user:', existingUser.id);
@@ -319,12 +323,39 @@ export async function POST(request: NextRequest) {
 
     let user = existingUser;
 
-    // Step 5: Create user in database if not exists
+    // Step 5: Validate referral code if provided
+    let inviterId: string | null = null;
+    if (referralCode && !existingUser) {
+      console.log('[AUTH] === STEP 5: VALIDATING REFERRAL CODE ===');
+      console.log('[AUTH] Referral code provided, validating...');
+      
+      // Check if referral code exists and get inviter
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: inviter, error: inviterError } = await (supabase as any)
+        .from('users')
+        .select('id, telegram_id')
+        .eq('referral_code', referralCode)
+        .single();
+      
+      if (inviterError || !inviter) {
+        console.log('[AUTH] Invalid referral code:', referralCode);
+      } else {
+        // Prevent self-referral
+        if (inviter.telegram_id === telegramId) {
+          console.log('[AUTH] Self-referral detected, ignoring');
+        } else {
+          inviterId = inviter.id;
+          console.log('[AUTH] Valid referral code, inviter ID:', inviterId);
+        }
+      }
+    }
+
+    // Step 6: Create user in database if not exists
     if (!existingUser) {
-      console.log('[AUTH] === STEP 5: CREATING USER IN DATABASE ===');
+      console.log('[AUTH] === STEP 6: CREATING USER IN DATABASE ===');
       console.log('[AUTH] User does not exist in database, creating new user...');
-      const referralCode = Math.random().toString(36).substring(2, 10).toUpperCase();
-      console.log('[AUTH] Generated referral code:', referralCode);
+      const userReferralCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+      console.log('[AUTH] Generated referral code:', userReferralCode);
 
       const { data: newUser, error: insertError } = await supabase
         .from('users')
@@ -337,7 +368,7 @@ export async function POST(request: NextRequest) {
           usdt_balance: 0,
           energy: 1000,
           max_energy: 1000,
-          referral_code: referralCode,
+          referral_code: userReferralCode,
         })
         .select()
         .single();
@@ -353,8 +384,28 @@ export async function POST(request: NextRequest) {
       console.log('[AUTH] ✓ User created successfully:', newUser);
       user = newUser;
 
-      // Step 6: Create profile
-      console.log('[AUTH] === STEP 6: CREATING PROFILE ===');
+      // Step 7: Create referral record if valid referral code was provided
+      if (inviterId) {
+        console.log('[AUTH] === STEP 7: CREATING REFERRAL RECORD ===');
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: referralError } = await (supabase as any)
+          .from('referrals')
+          .insert({
+            inviter_id: inviterId,
+            invitee_id: user.id,
+            referral_code: referralCode,
+            status: 'active'
+          });
+        
+        if (referralError) {
+          console.error('[AUTH] Failed to create referral record:', referralError);
+        } else {
+          console.log('[AUTH] ✓ Referral record created successfully');
+        }
+      }
+
+      // Step 8: Create profile
+      console.log('[AUTH] === STEP 8: CREATING PROFILE ===');
       const { data: newProfile, error: profileError } = await supabase
         .from('profiles')
         .insert({
@@ -375,8 +426,8 @@ export async function POST(request: NextRequest) {
 
       console.log('[AUTH] ✓ Profile created successfully:', newProfile);
 
-      // Step 7: Create wallet
-      console.log('[AUTH] === STEP 7: CREATING WALLET ===');
+      // Step 9: Create wallet
+      console.log('[AUTH] === STEP 9: CREATING WALLET ===');
       const { data: newWallet, error: walletError } = await supabase
         .from('wallets')
         .insert({

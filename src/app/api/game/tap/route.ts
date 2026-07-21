@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { processReferralReward } from '@/lib/referralRewards';
 
 // Initialize Supabase client at runtime
 function getSupabaseClient() {
@@ -34,6 +35,7 @@ function calculateRegeneration(lastUpdate: string, maxEnergy: number, currentEne
 }
 
 // Check for active boosts
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getActiveBoosts(supabase: any, userId: string): Promise<{
   x2_coins: boolean;
   auto_tap: boolean;
@@ -196,6 +198,9 @@ export async function POST(request: NextRequest) {
     await updateMissionProgress(supabase, userId, 'taps', tapCount);
     await updateMissionProgress(supabase, userId, 'coins', totalCoins);
 
+    // Process referral rewards (5% of coins earned)
+    await processReferralReward(userId, totalCoins, 'COINS', 'tap');
+
     return NextResponse.json({
       success: true,
       user: updatedUser,
@@ -213,6 +218,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function updateMissionProgress(supabase: any, userId: string, type: string, amount: number) {
   // Get active missions for this requirement type
   const { data: missions } = await supabase

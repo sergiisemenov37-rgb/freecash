@@ -6,8 +6,12 @@ import TapGame from '@/components/TapGame';
 import BoostsShop from '@/components/BoostsShop';
 import DailyRewards from '@/components/DailyRewards';
 import Missions from '@/components/Missions';
+import Referrals from '@/components/Referrals';
+import Wallet from '@/components/Wallet';
+import Withdrawals from '@/components/Withdrawals';
+import AdminWithdrawals from '@/components/AdminWithdrawals';
 
-type Tab = 'game' | 'boosts' | 'rewards' | 'missions';
+type Tab = 'game' | 'boosts' | 'rewards' | 'missions' | 'referrals' | 'wallet' | 'withdrawals' | 'admin';
 
 export default function Home() {
   const { user, isAuthenticated, isLoading, login } = useAuth();
@@ -159,17 +163,21 @@ export default function Home() {
 
       {/* Tab Navigation */}
       <div className="bg-white/10 backdrop-blur-sm border-b border-white/20">
-        <div className="max-w-md mx-auto flex">
+        <div className="max-w-md mx-auto flex overflow-x-auto">
           {[
             { id: 'game' as Tab, label: 'Game', icon: '🎮' },
             { id: 'boosts' as Tab, label: 'Boosts', icon: '⚡' },
             { id: 'rewards' as Tab, label: 'Rewards', icon: '🎁' },
-            { id: 'missions' as Tab, label: 'Missions', icon: '🎯' }
+            { id: 'missions' as Tab, label: 'Missions', icon: '🎯' },
+            { id: 'referrals' as Tab, label: 'Referrals', icon: '👥' },
+            { id: 'wallet' as Tab, label: 'Wallet', icon: '💰' },
+            { id: 'withdrawals' as Tab, label: 'Withdraw', icon: '💸' },
+            { id: 'admin' as Tab, label: 'Admin', icon: '⚙️' }
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 py-3 text-center font-semibold transition-colors ${
+              className={`flex-shrink-0 px-4 py-3 text-center font-semibold transition-colors ${
                 activeTab === tab.id
                   ? 'bg-white/20 text-white'
                   : 'text-white/70 hover:bg-white/10'
@@ -208,6 +216,30 @@ export default function Home() {
             userId={user.id}
             onClaim={refreshGameState}
           />
+        )}
+        
+        {activeTab === 'referrals' && user?.id && (
+          <Referrals userId={user.id} />
+        )}
+        
+        {activeTab === 'wallet' && user?.id && (
+          <Wallet 
+            userId={user.id}
+            userCoins={currentUser?.coins_balance || 0}
+            userUsdt={currentUser?.usdt_balance || 0}
+          />
+        )}
+        
+        {activeTab === 'withdrawals' && user?.id && (
+          <Withdrawals 
+            userId={user.id}
+            userUsdt={currentUser?.usdt_balance || 0}
+            onWithdrawalComplete={refreshGameState}
+          />
+        )}
+        
+        {activeTab === 'admin' && (
+          <AdminWithdrawals />
         )}
       </div>
     </div>
