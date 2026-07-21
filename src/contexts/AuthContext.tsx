@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 interface User {
   id: string;
@@ -30,43 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  useEffect(() => {
-    // Wait for Telegram WebApp to be ready before checking auth
-    const initTelegramAndCheckAuth = () => {
-      console.log('[AUTH] === TELEGRAM WEBAPP DEBUG ===');
-      console.log('[AUTH] window.Telegram exists:', typeof window !== 'undefined' && !!window.Telegram);
-      console.log('[AUTH] window.Telegram.WebApp exists:', typeof window !== 'undefined' && !!window.Telegram?.WebApp);
-      
-      if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-        const tg = window.Telegram.WebApp;
-        console.log('[AUTH] Telegram WebApp version:', tg.version);
-        console.log('[AUTH] Telegram WebApp platform:', tg.platform);
-        console.log('[AUTH] Telegram WebApp initData length:', tg.initData?.length || 0);
-        console.log('[AUTH] Telegram WebApp initData preview:', tg.initData?.substring(0, 100) + '...' || 'empty');
-        console.log('[AUTH] Telegram WebApp initDataUnsafe:', JSON.stringify(tg.initDataUnsafe, null, 2));
-        
-        // Call ready() to signal to Telegram that the app is ready
-        tg.ready();
-        tg.expand();
-        
-        console.log('[AUTH] Telegram WebApp ready() called');
-        
-        // Now check auth with the initData
-        checkAuth();
-      } else {
-        console.error('[AUTH] Telegram WebApp not available');
-        console.log('[AUTH] Running outside Telegram or SDK not loaded');
-        setIsLoading(false);
-        setIsAuthenticated(false);
-      }
-    };
-
-    // Small delay to ensure Telegram SDK is loaded
-    const timer = setTimeout(initTelegramAndCheckAuth, 100);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     try {
       console.log('[AUTH] === AUTHENTICATION REQUEST ===');
       
@@ -121,7 +85,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    // Wait for Telegram WebApp to be ready before checking auth
+    const initTelegramAndCheckAuth = () => {
+      console.log('[AUTH] === TELEGRAM WEBAPP DEBUG ===');
+      console.log('[AUTH] window.Telegram exists:', typeof window !== 'undefined' && !!window.Telegram);
+      console.log('[AUTH] window.Telegram.WebApp exists:', typeof window !== 'undefined' && !!window.Telegram?.WebApp);
+      
+      if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+        const tg = window.Telegram.WebApp;
+        console.log('[AUTH] Telegram WebApp version:', tg.version);
+        console.log('[AUTH] Telegram WebApp platform:', tg.platform);
+        console.log('[AUTH] Telegram WebApp initData length:', tg.initData?.length || 0);
+        console.log('[AUTH] Telegram WebApp initData preview:', tg.initData?.substring(0, 100) + '...' || 'empty');
+        console.log('[AUTH] Telegram WebApp initDataUnsafe:', JSON.stringify(tg.initDataUnsafe, null, 2));
+        
+        // Call ready() to signal to Telegram that the app is ready
+        tg.ready();
+        tg.expand();
+        
+        console.log('[AUTH] Telegram WebApp ready() called');
+        
+        // Now check auth with the initData
+        checkAuth();
+      } else {
+        console.error('[AUTH] Telegram WebApp not available');
+        console.log('[AUTH] Running outside Telegram or SDK not loaded');
+        setIsLoading(false);
+        setIsAuthenticated(false);
+      }
+    };
+
+    // Small delay to ensure Telegram SDK is loaded
+    const timer = setTimeout(initTelegramAndCheckAuth, 100);
+    return () => clearTimeout(timer);
+  }, [checkAuth]);
 
   const login = async () => {
     setIsLoading(true);

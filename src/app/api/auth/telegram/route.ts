@@ -206,7 +206,7 @@ export async function POST(request: NextRequest) {
     // Step 3: Create or get auth user using admin client
     console.log('[AUTH] === STEP 3: SUPABASE AUTH USER CREATION ===');
     console.log('[AUTH] Creating/getting auth user with admin client...');
-    const supabase = getSupabaseClient();
+    const supabase = getSupabaseClient() as any;
     const email = `telegram_${telegramId}@freecash.app`;
     const password = telegramId.toString();
     console.log('[AUTH] Email:', email);
@@ -214,7 +214,7 @@ export async function POST(request: NextRequest) {
     
     // Use admin client to create user with auto-confirmation
     console.log('[AUTH] Calling supabase.auth.admin.createUser...');
-    const { data: _authData, error: authCreateError } = await supabase.auth.admin.createUser({
+    const { error: authCreateError } = await supabase.auth.admin.createUser({
       email,
       password,
       email_confirm: true,

@@ -1,10 +1,70 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import TapGame from '@/components/TapGame';
+import BoostsShop from '@/components/BoostsShop';
+import DailyRewards from '@/components/DailyRewards';
+import Missions from '@/components/Missions';
+
+type Tab = 'game' | 'boosts' | 'rewards' | 'missions';
 
 export default function Home() {
   const { user, isAuthenticated, isLoading, login } = useAuth();
+  const [activeTab, setActiveTab] = useState<Tab>('game');
+  const [gameState, setGameState] = useState<{
+    user: {
+      id: string;
+      telegram_id: number;
+      username?: string;
+      first_name?: string;
+      last_name?: string;
+      coins_balance: number;
+      usdt_balance: number;
+      energy: number;
+      max_energy: number;
+      coins_per_tap: number;
+      energy_regen_rate: number;
+      total_taps: number;
+      referral_code?: string;
+    };
+    boosts: Array<{
+      id: string;
+      boost_type: string;
+      level: number;
+      max_level: number;
+      is_active: boolean;
+    }>;
+    dailyRewards: {
+      streak: number;
+      last_claim: string | null;
+      total_claims: number;
+      claim_history: string[];
+    } | null;
+    missions: Array<{
+      id: string;
+      progress: number;
+      is_completed: boolean;
+      is_claimed: boolean;
+      missions: {
+        id: string;
+        mission_type: string;
+        title: string;
+        description: string;
+        requirement_type: string;
+        requirement_target: number;
+        reward_coins: number;
+        reward_usdt: number;
+      };
+    }>;
+    autoTap: {
+      id: string;
+      user_id: string;
+      taps_per_minute: number;
+      last_run: string;
+      is_active: boolean;
+    } | null;
+  } | null>(null);
 
   useEffect(() => {
     console.log('[PAGE] === PAGE COMPONENT MOUNTED ===');
@@ -19,6 +79,32 @@ export default function Home() {
       console.log('[PAGE] Telegram WebApp initData length:', tg.initData?.length || 0);
     }
   }, []);
+
+  const refreshGameState = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const response = await fetch(`/api/game/state?userId=${user.id}`);
+      const data = await response.json();
+      if (data.success) {
+        setGameState(data);
+      }
+    } catch (error) {
+      console.error('Failed to refresh game state:', error);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    let mounted = true;
+    const loadState = async () => {
+      if (mounted && user?.id) {
+        await refreshGameState();
+      }
+    };
+    loadState();
+    return () => {
+      mounted = false;
+    };
+  }, [user, refreshGameState]);
 
   if (isLoading) {
     return (
@@ -49,52 +135,80 @@ export default function Home() {
     );
   }
 
+  const currentUser = gameState?.user || user;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600">
-      <div className="container mx-auto px-4 py-8">
-        <div className="bg-white rounded-2xl p-6 shadow-2xl">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-800">
-                Welcome, {user?.first_name || 'User'}!
-              </h1>
-              <p className="text-gray-600">@{user?.username || 'unknown'}</p>
-            </div>
-            <div className="text-right">
-              <div className="text-3xl font-bold text-blue-600">
-                {user?.coins_balance || 0}
-              </div>
-              <div className="text-sm text-gray-500">Coins</div>
-            </div>
+      {/* Header */}
+      <div className="bg-white/10 backdrop-blur-sm border-b border-white/20 p-4">
+        <div className="max-w-md mx-auto flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-white">
+              {currentUser?.first_name || 'User'}
+            </h1>
+            <p className="text-sm text-white/80">@{currentUser?.username || 'unknown'}</p>
           </div>
-
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="bg-blue-50 rounded-xl p-4">
-              <div className="text-2xl font-bold text-blue-600">
-                {user?.usdt_balance || 0}
-              </div>
-              <div className="text-sm text-gray-600">USDT Balance</div>
+          <div className="text-right">
+            <div className="text-2xl font-bold text-yellow-300">
+              {currentUser?.coins_balance?.toLocaleString() || 0}
             </div>
-            <div className="bg-purple-50 rounded-xl p-4">
-              <div className="text-2xl font-bold text-purple-600">
-                {user?.energy || 0}/{user?.max_energy || 1000}
-              </div>
-              <div className="text-sm text-gray-600">Energy</div>
-            </div>
-          </div>
-
-          <div className="bg-gray-50 rounded-xl p-4">
-            <h3 className="font-semibold text-gray-800 mb-2">Referral Code</h3>
-            <div className="flex items-center gap-2">
-              <code className="flex-1 bg-white px-3 py-2 rounded-lg text-sm">
-                {user?.referral_code || 'N/A'}
-              </code>
-              <button className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
-                Copy
-              </button>
-            </div>
+            <div className="text-xs text-white/80">Coins</div>
           </div>
         </div>
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="bg-white/10 backdrop-blur-sm border-b border-white/20">
+        <div className="max-w-md mx-auto flex">
+          {[
+            { id: 'game' as Tab, label: 'Game', icon: '🎮' },
+            { id: 'boosts' as Tab, label: 'Boosts', icon: '⚡' },
+            { id: 'rewards' as Tab, label: 'Rewards', icon: '🎁' },
+            { id: 'missions' as Tab, label: 'Missions', icon: '🎯' }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 py-3 text-center font-semibold transition-colors ${
+                activeTab === tab.id
+                  ? 'bg-white/20 text-white'
+                  : 'text-white/70 hover:bg-white/10'
+              }`}
+            >
+              <span className="text-xl mr-1">{tab.icon}</span>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="max-w-md mx-auto p-4">
+        {activeTab === 'game' && user?.id && (
+          <TapGame userId={user.id} />
+        )}
+        
+        {activeTab === 'boosts' && user?.id && (
+          <BoostsShop 
+            userId={user.id} 
+            userCoins={currentUser?.coins_balance || 0}
+            onPurchase={refreshGameState}
+          />
+        )}
+        
+        {activeTab === 'rewards' && user?.id && (
+          <DailyRewards 
+            userId={user.id}
+            onClaim={refreshGameState}
+          />
+        )}
+        
+        {activeTab === 'missions' && user?.id && (
+          <Missions 
+            userId={user.id}
+            onClaim={refreshGameState}
+          />
+        )}
       </div>
     </div>
   );

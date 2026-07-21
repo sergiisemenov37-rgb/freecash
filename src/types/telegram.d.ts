@@ -3,11 +3,23 @@ declare global {
     Telegram: {
       WebApp: {
         initData: string;
-        initDataUnsafe: any;
+        initDataUnsafe: {
+          query_id?: string;
+          user?: {
+            id: number;
+            first_name: string;
+            last_name?: string;
+            username?: string;
+            language_code?: string;
+            is_premium?: boolean;
+          };
+          auth_date: number;
+          hash: string;
+        };
         version: string;
         platform: string;
         colorScheme: string;
-        themeParams: any;
+        themeParams: Record<string, string>;
         isExpanded: boolean;
         viewportHeight: number;
         viewportStableHeight: number;
@@ -36,7 +48,7 @@ declare global {
           disable: () => void;
           showProgress: (leaveActive: boolean) => void;
           hideProgress: () => void;
-          setParams: (params: any) => void;
+          setParams: (params: Record<string, unknown>) => void;
         };
         HapticFeedback: {
           impactOccurred: (style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft') => void;
