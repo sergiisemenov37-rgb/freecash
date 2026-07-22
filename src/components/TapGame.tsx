@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Boosts from './Boosts';
 
 interface GameState {
   user: {
@@ -122,7 +123,25 @@ export default function TapGame({ userId }: { userId: string }) {
   const energyPercentage = (user.energy / user.max_energy) * 100;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      {/* Wallet Section at Top */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="rounded-2xl p-4" style={{ backgroundColor: '#151D2B', border: '1px solid rgba(255,165,0,0.2)' }}>
+         <div className="flex items-center gap-2 mb-1">
+            <span className="text-2xl">🪙</span>
+            <span className="text-gray-400 text-sm">Coins</span>
+          </div>
+          <div className="text-2xl font-bold text-orange-500">{user.coins_balance.toLocaleString()}</div>
+        </div>
+        <div className="rounded-2xl p-4" style={{ backgroundColor: '#151D2B', border: '1px solid rgba(34,197,94,0.2)' }}>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-2xl">💵</span>
+            <span className="text-gray-400 text-sm">USDT</span>
+          </div>
+          <div className="text-2xl font-bold text-green-500">{user.usdt_balance.toFixed(2)}</div>
+        </div>
+      </div>
+
       {/* Energy Bar */}
       <div className="rounded-2xl p-4" style={{ backgroundColor: '#151D2B' }}>
         <div className="flex justify-between items-center mb-2">
@@ -262,6 +281,13 @@ export default function TapGame({ userId }: { userId: string }) {
         <div className="text-white text-lg font-medium">Tap to earn Coins</div>
         <div className="text-gray-400 text-sm">1 Coin per Tap</div>
       </div>
+
+      {/* Boosts Section */}
+      <Boosts 
+        userId={userId} 
+        userCoins={user.coins_balance}
+        onBoostPurchase={fetchGameState}
+      />
     </div>
   );
 }

@@ -22,17 +22,15 @@ function getSupabaseClient() {
 
 // Boost pricing configuration
 const BOOST_PRICES = {
-  x2_coins: { base: 1000, multiplier: 2 },
-  auto_tap: { base: 5000, multiplier: 1.5 },
-  energy_upgrade: { base: 2000, multiplier: 1.8 },
-  critical_hit: { base: 3000, multiplier: 2 }
+  multitap: { base: 1000, multiplier: 1.5 },
+  energy_limit: { base: 1500, multiplier: 1.6 },
+  recharging_speed: { base: 2000, multiplier: 1.7 }
 };
 
 const BOOST_MAX_LEVELS = {
-  x2_coins: 10,
-  auto_tap: 5,
-  energy_upgrade: 20,
-  critical_hit: 10
+  multitap: 10,
+  energy_limit: 10,
+  recharging_speed: 10
 };
 
 // Calculate boost price based on level
