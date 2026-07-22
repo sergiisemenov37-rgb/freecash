@@ -3,15 +3,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import TapGame from '@/components/TapGame';
-import BoostsShop from '@/components/BoostsShop';
-import DailyRewards from '@/components/DailyRewards';
-import Missions from '@/components/Missions';
-import Referrals from '@/components/Referrals';
+import Earn from '@/components/Earn';
+import Rewards from '@/components/Rewards';
+import Friends from '@/components/Friends';
 import Wallet from '@/components/Wallet';
-import Withdrawals from '@/components/Withdrawals';
-import AdminWithdrawals from '@/components/AdminWithdrawals';
+import Withdraw from '@/components/Withdraw';
 
-type Tab = 'game' | 'boosts' | 'rewards' | 'missions' | 'referrals' | 'wallet' | 'withdrawals' | 'admin';
+type Tab = 'game' | 'earn' | 'rewards' | 'friends' | 'wallet' | 'withdraw';
 
 export default function Home() {
   const { user, isAuthenticated, isLoading, login } = useAuth();
@@ -112,7 +110,7 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-500 to-purple-600">
+      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#0B1220' }}>
         <div className="text-white text-xl">Loading...</div>
       </div>
     );
@@ -120,17 +118,21 @@ export default function Home() {
 
   if (!isAuthenticated) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 p-4">
-        <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
-          <h1 className="text-3xl font-bold text-gray-800 mb-4 text-center">
-            Welcome to FreeCash
+      <div className="flex flex-col items-center justify-center min-h-screen p-4" style={{ backgroundColor: '#0B1220' }}>
+        <div className="rounded-2xl p-8 max-w-md w-full" style={{ backgroundColor: '#151D2B' }}>
+          <h1 className="text-3xl font-bold text-white mb-4 text-center">
+            Welcome to FreeCoin
           </h1>
-          <p className="text-gray-600 mb-6 text-center">
+          <p className="text-gray-400 mb-6 text-center">
             Please authenticate with Telegram to continue
           </p>
           <button
             onClick={login}
-            className="w-full bg-blue-500 text-white py-3 rounded-xl font-semibold hover:bg-blue-600 transition-colors"
+            className="w-full py-3 rounded-xl font-semibold text-white transition-all hover:scale-105"
+            style={{ 
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)'
+            }}
           >
             Login with Telegram
           </button>
@@ -142,84 +144,79 @@ export default function Home() {
   const currentUser = gameState?.user || user;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600">
-      {/* Header */}
-      <div className="bg-white/10 backdrop-blur-sm border-b border-white/20 p-4">
-        <div className="max-w-md mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-white">
-              {currentUser?.first_name || 'User'}
-            </h1>
-            <p className="text-sm text-white/80">@{currentUser?.username || 'unknown'}</p>
-          </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold text-yellow-300">
+    <div className="min-h-screen" style={{ backgroundColor: '#0B1220' }}>
+      {/* Header - Coins and USDT only */}
+      <div className="p-4" style={{ backgroundColor: '#151D2B' }}>
+        <div className="max-w-md mx-auto flex gap-3">
+          <div className="flex-1 rounded-xl p-4" style={{ 
+            background: 'linear-gradient(135deg, rgba(255, 165, 0, 0.1) 0%, rgba(255, 140, 0, 0.2) 100%)',
+            border: '1px solid rgba(255, 165, 0, 0.3)'
+          }}>
+            <div className="text-sm text-orange-400 mb-1">Coins</div>
+            <div className="text-2xl font-bold text-orange-500">
               {currentUser?.coins_balance?.toLocaleString() || 0}
             </div>
-            <div className="text-xs text-white/80">Coins</div>
+          </div>
+          <div className="flex-1 rounded-xl p-4" style={{ 
+            background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(22, 163, 74, 0.2) 100%)',
+            border: '1px solid rgba(34, 197, 94, 0.3)'
+          }}>
+            <div className="text-sm text-green-400 mb-1">USDT</div>
+            <div className="text-2xl font-bold text-green-500">
+              {currentUser?.usdt_balance?.toFixed(2) || '0.00'}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Tab Navigation */}
-      <div className="bg-white/10 backdrop-blur-sm border-b border-white/20">
-        <div className="max-w-md mx-auto flex overflow-x-auto">
+      {/* Tab Navigation - 5 tabs only */}
+      <div className="fixed bottom-0 left-0 right-0" style={{ backgroundColor: '#151D2B', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+        <div className="max-w-md mx-auto flex">
           {[
             { id: 'game' as Tab, label: 'Game', icon: '🎮' },
-            { id: 'boosts' as Tab, label: 'Boosts', icon: '⚡' },
+            { id: 'earn' as Tab, label: 'Earn', icon: '💰' },
             { id: 'rewards' as Tab, label: 'Rewards', icon: '🎁' },
-            { id: 'missions' as Tab, label: 'Missions', icon: '🎯' },
-            { id: 'referrals' as Tab, label: 'Referrals', icon: '👥' },
-            { id: 'wallet' as Tab, label: 'Wallet', icon: '💰' },
-            { id: 'withdrawals' as Tab, label: 'Withdraw', icon: '💸' },
-            { id: 'admin' as Tab, label: 'Admin', icon: '⚙️' }
+            { id: 'friends' as Tab, label: 'Friends', icon: '👥' },
+            { id: 'wallet' as Tab, label: 'Wallet', icon: '�' }
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-shrink-0 px-4 py-3 text-center font-semibold transition-colors ${
+              className={`flex-1 py-4 text-center transition-all ${
                 activeTab === tab.id
-                  ? 'bg-white/20 text-white'
-                  : 'text-white/70 hover:bg-white/10'
+                  ? 'text-white'
+                  : 'text-gray-500 hover:text-gray-300'
               }`}
             >
-              <span className="text-xl mr-1">{tab.icon}</span>
-              {tab.label}
+              <div className="text-2xl mb-1">{tab.icon}</div>
+              <div className="text-xs font-medium">{tab.label}</div>
             </button>
           ))}
         </div>
       </div>
 
       {/* Content */}
-      <div className="max-w-md mx-auto p-4">
+      <div className="max-w-md mx-auto p-4 pb-24">
         {activeTab === 'game' && user?.id && (
           <TapGame userId={user.id} />
         )}
         
-        {activeTab === 'boosts' && user?.id && (
-          <BoostsShop 
+        {activeTab === 'earn' && user?.id && (
+          <Earn 
             userId={user.id} 
-            userCoins={currentUser?.coins_balance || 0}
-            onPurchase={refreshGameState}
+            onTaskComplete={refreshGameState}
           />
         )}
         
         {activeTab === 'rewards' && user?.id && (
-          <DailyRewards 
+          <Rewards 
             userId={user.id}
             onClaim={refreshGameState}
           />
         )}
         
-        {activeTab === 'missions' && user?.id && (
-          <Missions 
-            userId={user.id}
-            onClaim={refreshGameState}
-          />
-        )}
-        
-        {activeTab === 'referrals' && user?.id && (
-          <Referrals userId={user.id} />
+        {activeTab === 'friends' && user?.id && (
+          <Friends userId={user.id} />
         )}
         
         {activeTab === 'wallet' && user?.id && (
@@ -227,19 +224,17 @@ export default function Home() {
             userId={user.id}
             userCoins={currentUser?.coins_balance || 0}
             userUsdt={currentUser?.usdt_balance || 0}
+            onWithdraw={() => setActiveTab('withdraw')}
           />
         )}
-        
-        {activeTab === 'withdrawals' && user?.id && (
-          <Withdrawals 
+
+        {activeTab === 'withdraw' && user?.id && (
+          <Withdraw 
             userId={user.id}
             userUsdt={currentUser?.usdt_balance || 0}
+            onBack={() => setActiveTab('wallet')}
             onWithdrawalComplete={refreshGameState}
           />
-        )}
-        
-        {activeTab === 'admin' && (
-          <AdminWithdrawals />
         )}
       </div>
     </div>
